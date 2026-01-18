@@ -1,0 +1,140 @@
+<odoo>
+    <template id="report_weekly_lots_document">
+      <t t-call="web.basic_layout">
+        <div class="page">
+            <!-- Cabecera -->
+            <div class="container" style="width:100%; margin:10px 10px">
+                <div class="row">
+                    <div class="col-6">
+                     <img t-if="user.company_id.logo" t-att-src="image_data_uri(user.company_id.logo)" style="max-height: 120px;"/>
+                </div>
+                 <div class="col-6" style="text-aling:right;width:50%">
+                     <h2 style="color: #2c3e50; padding: 20px 0px; padding-left:100px">REPORTE SEMANAL</h2>
+                </div>
+                </div>
+                
+            </div>
+            <div style="text-align: left; margin-bottom: 24px;">
+                <h3>Lotes próximos a vencer (<span t-if="days" t-out="days"></span> días)</h3>
+                <p style="color: #333; font-size: 14px;">
+                    Fecha de generación: <strong><span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/></strong>
+                </p>
+                
+            </div>
+            <t t-if="docs">
+                <!-- Tabla de datos -->
+                <table class="table table-sm" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 10px; text-align: left; color: #495057;">Producto</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Categoría</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Lote</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Recepción</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Vencimiento</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Ubicación</th>
+                            <th style="padding: 10px; text-align: right; color: #495057;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="docs" t-as="quant">
+                            <tr style="border-bottom: 1px solid #e9ecef;">
+                                <td style="padding: 8px 10px;"><t t-esc="quant.product_id.display_name or ''"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="quant.product_id.categ_id.display_name or 'Sin categoría'"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.name or ''"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="quant.in_date.strftime('%d/%m/%Y') or ''"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.expiration_date and quant.lot_id.expiration_date.strftime('%d/%m/%Y') or ''"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="quant.location_id.name or ''"/></td>
+                                <td style="padding: 8px 10px; text-align: right;"><t t-esc="quant.quantity"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </t>
+            <t t-else="">
+                <p style="margin-top: 20px; color: #6c757d;">No hay lotes proximos a vencer.</p>
+            </t>
+            
+            
+            <t t-if="expired_quants">
+                <h3 style="margin-top: 30px;">Lotes vencidos en stock</h3>
+                <table class="table table-sm" style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                    <thead>
+                        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                            <th style="padding: 10px; text-align: left; color: #495057;">Producto</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Categoría</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Lote</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Entrada</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Vencimiento</th>
+                            <th style="padding: 10px; text-align: left; color: #495057;">Ubicación</th>
+                            <th style="padding: 10px; text-align: right; color: #495057;">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="expired_quants" t-as="eq">
+                            <tr style="border-bottom: 1px solid #e9ecef;">
+                                <td style="padding: 8px 10px;"><t t-esc="eq['product_name']"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="eq['category_name']"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="eq['lot_name']"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="eq['in_date']"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="eq['expiration_date']"/></td>
+                                <td style="padding: 8px 10px;"><t t-esc="eq['location_name']"/></td>
+                                <td style="padding: 8px 10px; text-align: right;"><t t-esc="eq['quantity']"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+            </t>
+            
+            <t t-else="">
+                <p style="margin-top: 20px; color: #6c757d;">No hay lotes vencidos.</p>
+            </t>
+
+            <!-- Pie opcional -->
+            <div style="margin-top: 24px; color: #6c757d; font-size: 11px; text-align: center;">
+                Este reporte se genera automáticamente.
+            </div>
+        </div>
+    </t>
+    </template>
+
+    <record id="report_weekly_lots_pdf" model="ir.actions.report">
+        <field name="name">Reporte de Lotes Próximos a Vencer</field>
+        <field name="model">stock.quant</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">lot_expiry_notifications.report_weekly_lots_document</field>
+        <field name="report_file">lot_expiry_notifications.report_weekly_lots_document</field>
+    </record>
+    <record id="view_report_weekly_lots_recipient_list" model="ir.ui.view">
+        <field name="name">report.weekly.lots.recipient.list</field>
+        <field name="model">report.weekly.lots.recipient</field>
+        <field name="arch" type="xml">
+            <list editable="top">
+                <field name="name" invisible="1"/>
+                <field name="category_ids" widget="many2many_tags" options="{'no_create': True}" required="1"/>
+                <field name="user_ids" widget="many2many_tags" options="{'no_create': True}"/>
+                <field name="partner_ids" widget="many2many_tags" options="{'no_create': True}"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Acción de ventana -->
+    <record id="action_report_weekly_lots_recipient" model="ir.actions.act_window">
+        <field name="name">Destinatarios por Categoría</field>
+        <field name="res_model">report.weekly.lots.recipient</field>
+        <field name="view_mode">list</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configura destinatarios para el reporte semanal de lotes próximos a vencer.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menú (ajusta el parent según tu estructura) -->
+    <menuitem
+        id="menu_report_weekly_lots_recipient"
+        name="Destinatarios Reporte Lotes"
+        action="action_report_weekly_lots_recipient"
+        parent="stock.menu_stock_config_settings"
+        sequence="50"
+    />
+</odoo>

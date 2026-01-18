@@ -1,0 +1,43 @@
+<odoo>
+    <record id="view_report_weekly_lots_form" model="ir.ui.view">
+        <field name="name">report.weekly.lots.form</field>
+        <field name="model">report.weekly.lots</field>
+        <field name="arch" type="xml">
+            <form string="Configuración de Reporte de Lotes">
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Configuración de Reporte Semanal de Lotes</h1>
+                    </div>
+                    <group>
+                        <field name="days_threshold"/>
+                        <field name="category_ids" widget="many2many_tags"/>
+                    </group>
+                    <footer>
+                        <button string="Generar y Enviar por Categoría" 
+                                type="object" 
+                                name="action_send_email_by_category"
+                                class="btn-primary"/>
+                        <button string="Ver Reporte PDF" 
+                                type="object" 
+                                name="action_generate_report"
+                                class="btn-secondary"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <record id="action_open_report_weekly_lots_singleton" model="ir.actions.act_window">
+        <field name="name">Configuración de Reporte de Lotes</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">report.weekly.lots</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="view_id" ref="fix_name_incoming_invoice.view_report_weekly_lots_form"/>
+        <!-- Esto fuerza que siempre abra el primer (y único) registro -->
+        <field name="context">{}</field>
+        <field name="domain">[]</field>
+    </record>
+    
+
+</odoo>
