@@ -8,7 +8,7 @@
     "author": 'GonzaOdoo',
     "maintainer": "GonzaOdoo",
     "website": 'https://www.yourcompany.com',
-    "depends": ['stock'],
+    "depends": ['stock','product_expiry'],
     "assets": {},
     "data":[
         'security/ir.model.access.csv',
