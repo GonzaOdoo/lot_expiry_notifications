@@ -33,7 +33,7 @@
         <field name="res_model">report.weekly.lots</field>
         <field name="view_mode">form</field>
         <field name="target">current</field>
-        <field name="view_id" ref="fix_name_incoming_invoice.view_report_weekly_lots_form"/>
+        <field name="view_id" ref="lot_expiry_notifications.view_report_weekly_lots_form"/>
         <!-- Esto fuerza que siempre abra el primer (y único) registro -->
         <field name="context">{}</field>
         <field name="domain">[]</field>
