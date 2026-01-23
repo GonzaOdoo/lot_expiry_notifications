@@ -179,24 +179,60 @@ class ReporteSemanalLotes(models.Model):
             emails.update(rule.partner_ids.filtered('email').mapped('email'))
             if not emails:
                 continue
+
+            if self.category_ids:
+                category_names = self.category_ids.mapped('name')
+                categories_str = ', '.join(category_names)
+                categories_list_html = ''.join(f"<li>{name}</li>" for name in category_names)
+            else:
+                categories_str = "Todas las categorías"
+                categories_list_html = "<li>Todas las categorías</li>"
     
-            subject = f"Reporte Semanal de Lotes Próximos a Vencer - {', '.join(rule.category_ids.mapped('name'))}"
+            subject = f"Reporte Semanal de Lotes Vencidos y Próximos a Vencer"
             
             if quants or expired_quants:
                 # ✅ Hay lotes → generar PDF y adjuntar
                 report_name = 'lot_expiry_notifications.report_weekly_lots_pdf'
-                pdf_content, _ = self.env['ir.actions.report']._render_qweb_pdf(report_name, quants.ids,data={'expired_quants': expired_data,'days':self.days_threshold})
+                pdf_content, _ = self.env['ir.actions.report']._render_qweb_pdf(report_name, quants.ids,data={'expired_quants': expired_quants,'days':self.days_threshold})
                 attachment_vals = [{
                     'name': 'reporte_lotes_vencimiento.pdf',
                     'type': 'binary',
                     'datas': base64.b64encode(pdf_content).decode('utf-8'),
                     'mimetype': 'application/pdf'
                 }]
-                body = "<p>Adjunto el reporte de lotes próximos a vencer.</p>"
+                body = f"""
+                    <p>Estimado/a,</p>
+                    <p>Se adjunta el <strong>Reporte Semanal de Lotes Vencidos y Próximos a Vencer</strong>, 
+                       correspondiente a los siguientes criterios:</p>
+                    <ul>
+                        <li><strong>Período de análisis:</strong> {self.days_threshold} días desde hoy.</li>
+                        <li><strong>Categorías incluidas:</strong>
+                            <ul style="margin-top: 4px; margin-bottom: 12px;">
+                                {categories_list_html}
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>Este reporte incluye tanto lotes próximos a vencer como lotes ya vencidos en stock interno.</p>
+                    <p>Saludos</p>
+                    """
             else:
                 # ❌ No hay lotes → sin adjunto, mensaje informativo
                 attachment_vals = []
-                body = f"<p>No se encontraron lotes próximos a vencer o vencidos en las categorías asignadas en los próximos {self.days_threshold} días.</p>"
+                body = f"""
+                    <p>Estimado/a,</p>
+                    <p>No se han detectado lotes próximos a vencer ni lotes vencidos en stock interno 
+                       para los siguientes criterios:</p>
+                    <ul>
+                        <li><strong>Período de análisis:</strong> {self.days_threshold} días desde hoy.</li>
+                        <li><strong>Categorías monitoreadas:</strong>
+                            <ul style="margin-top: 4px; margin-bottom: 12px;">
+                                {categories_list_html}
+                            </ul>
+                        </li>
+                    </ul>
+                    <p>El sistema continuará informando según la configuración establecida.</p>
+                    <p>Saludos</p>
+                    """
     
             mail_values = {
                 'subject': subject,

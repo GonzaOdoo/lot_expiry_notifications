@@ -15,40 +15,49 @@
                 
             </div>
             <div style="text-align: left; margin-bottom: 24px;">
-                <h3>Lotes próximos a vencer (<span t-if="days" t-out="days"></span> días)</h3>
+                <h3>Lotes próximos a vencer (<span t-if="days" t-out="days"/> días)</h3>
                 <p style="color: #333; font-size: 14px;">
                     Fecha de generación: <strong><span t-esc="context_timestamp(datetime.datetime.now()).strftime('%Y-%m-%d')"/></strong>
                 </p>
                 
             </div>
             <t t-if="docs">
-                <!-- Tabla de datos -->
-                <table class="table table-sm" style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                    <thead>
-                        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 10px; text-align: left; color: #495057;">Producto</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Categoría</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Lote</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Recepción</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Vencimiento</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Ubicación</th>
-                            <th style="padding: 10px; text-align: right; color: #495057;">Cantidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-foreach="docs" t-as="quant">
-                            <tr style="border-bottom: 1px solid #e9ecef;">
-                                <td style="padding: 8px 10px;"><t t-esc="quant.product_id.display_name or ''"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="quant.product_id.categ_id.display_name or 'Sin categoría'"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.name or ''"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="quant.in_date.strftime('%d/%m/%Y') or ''"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.expiration_date and quant.lot_id.expiration_date.strftime('%d/%m/%Y') or ''"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="quant.location_id.name or ''"/></td>
-                                <td style="padding: 8px 10px; text-align: right;"><t t-esc="quant.quantity"/></td>
+                <!-- Obtener categorías únicas -->
+                <t t-set="categories" t-value="list(set([q.product_id.categ_id for q in docs if q.product_id.categ_id]))"/>
+                <!-- Ordenar categorías por nombre (opcional) -->
+                <t t-set="categories" t-value="sorted(categories, key=lambda c: c.display_name)"/>
+            
+                <t t-foreach="categories" t-as="categ">
+                    <h4 style="margin-top: 16px; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 6px;">
+                        <t t-esc="categ.display_name or 'Sin categoría'"/>
+                    </h4>
+                    <table class="table table-sm" style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 10px; text-align: left; color: #495057;">Producto</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Lote</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Recepción</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Vencimiento</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Ubicación</th>
+                                <th style="padding: 10px; text-align: right; color: #495057;">Cantidad</th>
                             </tr>
-                        </t>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="docs" t-as="quant">
+                                <t t-if="quant.product_id.categ_id == categ">
+                                    <tr style="border-bottom: 1px solid #e9ecef;">
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.product_id.display_name or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.name or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.in_date and quant.in_date.strftime('%d/%m/%Y') or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.expiration_date and quant.lot_id.expiration_date.strftime('%d/%m/%Y') or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.location_id.name or ''"/></td>
+                                        <td style="padding: 8px 10px; text-align: right;"><t t-esc="quant.quantity"/></td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
             </t>
             <t t-else="">
                 <p style="margin-top: 20px; color: #6c757d;">No hay lotes proximos a vencer.</p>
@@ -56,33 +65,40 @@
             
             
             <t t-if="expired_quants">
-                <h3 style="margin-top: 30px;">Lotes vencidos en stock</h3>
-                <table class="table table-sm" style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                    <thead>
-                        <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
-                            <th style="padding: 10px; text-align: left; color: #495057;">Producto</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Categoría</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Lote</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Recepción</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Vencimiento</th>
-                            <th style="padding: 10px; text-align: left; color: #495057;">Ubicación</th>
-                            <th style="padding: 10px; text-align: right; color: #495057;">Cantidad</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <t t-foreach="expired_quants" t-as="eq">
-                            <tr style="border-bottom: 1px solid #e9ecef;">
-                                <td style="padding: 8px 10px;"><t t-esc="eq['product_name']"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="eq['category_name']"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="eq['lot_name']"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="eq['in_date']"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="eq['expiration_date']"/></td>
-                                <td style="padding: 8px 10px;"><t t-esc="eq['location_name']"/></td>
-                                <td style="padding: 8px 10px; text-align: right;"><t t-esc="eq['quantity']"/></td>
+                <t t-set="exp_categories" t-value="list(set([q.product_id.categ_id for q in expired_quants if q.product_id.categ_id]))"/>
+                <t t-set="exp_categories" t-value="sorted(exp_categories, key=lambda c: c.display_name)"/>
+            
+                <t t-foreach="exp_categories" t-as="categ">
+                    <h4 style="margin-top: 30px; color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 6px;">
+                        Lotes vencidos - <t t-esc="categ.display_name or 'Sin categoría'"/>
+                    </h4>
+                    <table class="table table-sm" style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px;">
+                        <thead>
+                             <tr style="background-color: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 10px; text-align: left; color: #495057;">Producto</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Lote</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Recepción</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Vencimiento</th>
+                                <th style="padding: 10px; text-align: left; color: #495057;">Ubicación</th>
+                                <th style="padding: 10px; text-align: right; color: #495057;">Cantidad</th>
                             </tr>
-                        </t>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="expired_quants" t-as="quant">
+                                <t t-if="quant.product_id.categ_id == categ">
+                                    <tr style="border-bottom: 1px solid #e9ecef;">
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.product_id.display_name or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.name or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.in_date and quant.in_date.strftime('%d/%m/%Y') or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.lot_id.expiration_date and quant.lot_id.expiration_date.strftime('%d/%m/%Y') or ''"/></td>
+                                        <td style="padding: 8px 10px;"><t t-esc="quant.location_id.name or ''"/></td>
+                                        <td style="padding: 8px 10px; text-align: right;"><t t-esc="quant.quantity"/></td>
+                                    </tr>
+                                </t>
+                            </t>
+                        </tbody>
+                    </table>
+                </t>
             </t>
             
             <t t-else="">
