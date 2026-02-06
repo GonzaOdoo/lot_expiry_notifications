@@ -80,6 +80,7 @@ class ReporteSemanalLotes(models.Model):
             ('lot_id.expiration_date', '<=', date_limit),
             ('quantity', '>', 0),
             ('location_id.usage', '=', 'internal'),
+            ('location_id.ignore_on_reports','=', False),
         ]
         if self.category_ids:
             domain += [('product_id.categ_id', 'in', self.category_ids.ids)]
@@ -95,6 +96,7 @@ class ReporteSemanalLotes(models.Model):
             ('lot_id.expiration_date', '<', today),
             ('quantity', '>', 0),
             ('location_id.usage', '=', 'internal'),
+            ('location_id.ignore_on_reports','=', False),
         ]
         if category_ids:
             domain += [('product_id.categ_id', 'in', category_ids)]
@@ -156,6 +158,7 @@ class ReporteSemanalLotes(models.Model):
                 ('lot_id.expiration_date', '<=', fields.Date.today() + timedelta(days=config.days_threshold)),
                 ('quantity', '>', 0),
                 ('location_id.usage', '=', 'internal'),
+                ('location_id.ignore_on_reports','=', False),
                 ('product_id.categ_id', 'in', rule.category_ids.ids),
             ]
             quants = self.env['stock.quant'].search(domain, order='expiration_date')
@@ -180,8 +183,8 @@ class ReporteSemanalLotes(models.Model):
             if not emails:
                 continue
 
-            if self.category_ids:
-                category_names = self.category_ids.mapped('name')
+            if rule.category_ids:
+                category_names = rule.category_ids.mapped('name')
                 categories_str = ', '.join(category_names)
                 categories_list_html = ''.join(f"<li>{name}</li>" for name in category_names)
             else:
@@ -278,3 +281,10 @@ class ReportWeeklyLotsRecipient(models.Model):
         for rec in self:
             cats = ", ".join(rec.category_ids.mapped('name')[:3])
             rec.name = f"Destinatarios para: {cats}" if cats else "Sin categorías"
+
+
+
+class StockLocation(models.Model):
+    _inherit = 'stock.location'
+
+    ignore_on_reports = fields.Boolean(string='Ignorar en reportes')
